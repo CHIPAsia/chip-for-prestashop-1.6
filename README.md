@@ -2,7 +2,7 @@
 
 CHIP payment gateway module for **PrestaShop 1.6.x** (compatible with PHP 5.4+).
 
-> **Menggunakan PrestaShop 1.7 atau lebih baru (8.x, 9.x)?** Modul ini untuk PrestaShop 1.6 sahaja. Guna **[chip-for-prestashop](https://github.com/CHIPAsia/chip-for-prestashop)** untuk PrestaShop 1.7 – 9.x.
+> **Using PrestaShop 1.7 or newer (8.x, 9.x)?** This module is for PrestaShop 1.6 only. Use **[chip-for-prestashop](https://github.com/CHIPAsia/chip-for-prestashop)** for PrestaShop 1.7 – 9.x.
 
 Accept payments via CHIP: FPX, FPX B2B1, DuitNow QR, Card (Visa, Mastercard, Maestro), Atome, GrabPay, Maybank QRPay, ShopeePay, Touch 'n Go eWallet, Crypto Coin.
 
