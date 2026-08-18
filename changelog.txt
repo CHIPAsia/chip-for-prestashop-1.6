@@ -1,0 +1,14 @@
+== Changelog ==
+
+## [1.0.0] - 2026-08-18
+
+### Added
+
+- CHIP Collect payment gateway module for PrestaShop 1.6.x.
+- "Pay with CHIP" payment method on the order page (`displayPayment` hook).
+- Payment flow: builds payment via `POST /purchases/`, redirects to CHIP checkout page.
+- Webhook callback with X-Signature verification (RSA SHA-256) and fallback to `GET /purchases/{id}/`.
+- Idempotent order validation (`validateOrder`; `extra_vars['transaction_id']`).
+- Payment method whitelist configuration (HelperForm).
+- Payment confirmation message on the order confirmation page (`displayPaymentReturn`).
+- Payment method display names matching CHIP-API-SPEC.md (FPX, FPX B2B1, DuitNow QR, Card, Atome, GrabPay, Maybank QR, ShopeePay, Touch 'n Go, Crypto Coin).
