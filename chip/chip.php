@@ -19,7 +19,7 @@ class Chip extends PaymentModule
     public $tab = 'payments_gateways';
 
     /** @var string */
-    public $version = '1.0.0';
+    public $version = '1.0.1';
 
     /** @var string */
     public $author = 'CHIPAsia';

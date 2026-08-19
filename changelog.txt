@@ -1,4 +1,12 @@
 == Changelog ==
+## [1.0.1] - 2026-08-19
+
+### Fixed
+
+- Currency code sent uppercase (MYR not myr) — CHIP API rejects lowercase codes.
+- `/public_key/` returns the PEM as a raw JSON string; `getPublicKey()` now handles both shapes so webhook signature verification works.
+- Webhook fallback resolves the purchase id from the webhook body when there is no session cookie (webhook-only payments).
+
 
 ## [1.0.0] - 2026-08-18
 
