@@ -130,7 +130,15 @@ class ChipApi
             return false;
         }
 
-        return Tools::jsonDecode($response, true);
+        $decoded = Tools::jsonDecode($response, true);
+        if ($decoded === null) {
+            PrestaShopLogger::addLog('CHIP: API returned invalid JSON for ' . $path, 3, null, 'ChipApi', null, true);
+
+            return false;
+        }
+
+        // Some endpoints (e.g. /public_key/) return a plain string (PEM key).
+        return $decoded;
     }
 
     /**
@@ -173,15 +181,28 @@ class ChipApi
         }
 
         $response = $this->request('GET', '/public_key/');
-        if (!is_array($response) || empty($response['key'])) {
+        if ($response === false || $response === null) {
             PrestaShopLogger::addLog('CHIP: Unable to fetch public key', 3, null, 'ChipApi', null, true);
 
             return false;
         }
 
-        $key = $response['key'];
+        // The endpoint returns the PEM key either as a raw JSON string
+        // ("-----BEGIN PUBLIC KEY-----\n...") or as {"key": "..."}.
+        $key = '';
+        if (is_array($response)) {
+            $key = isset($response['key']) ? (string) $response['key'] : '';
+        } elseif (is_string($response)) {
+            $key = $response;
+        }
+        if ($key === '') {
+            PrestaShopLogger::addLog('CHIP: Unable to fetch public key', 3, null, 'ChipApi', null, true);
+
+            return false;
+        }
+
         // Normalize escaped newlines (mirrors WooCommerce get_public_key behavior)
-        $key = str_replace(array('\r\n', '\n'), array("\r\n", "\n"), (string) $key);
+        $key = str_replace(array('\r\n', '\n'), array("\r\n", "\n"), $key);
         Configuration::updateValue('CHIP_PUBLIC_KEY', $key, false, 0, 0);
 
         return $key;
