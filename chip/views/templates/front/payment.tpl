@@ -13,7 +13,10 @@
 			<a class="chip" href="{$chip_payment_url}" title="{$chip_module_name|escape:'html':'UTF-8'}">
 				<img src="{$chip_logo}" alt="{$chip_module_name|escape:'html':'UTF-8'}" style="max-height: 32px; vertical-align: middle; margin-right: 8px;" />
 				{$chip_module_name|escape:'html':'UTF-8'}
-				{if $chip_methods|@count > 0}
+				{if $chip_checkout_text}
+					<br />
+					<small>{$chip_checkout_text|escape:'html':'UTF-8'}</small>
+				{elseif $chip_methods|@count > 0}
 					<br />
 					<small>{foreach $chip_methods as $method}{$method|escape:'html':'UTF-8'}{if !$method@last} &middot; {/if}{/foreach}</small>
 				{/if}

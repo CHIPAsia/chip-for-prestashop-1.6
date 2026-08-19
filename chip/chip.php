@@ -19,7 +19,7 @@ class Chip extends PaymentModule
     public $tab = 'payments_gateways';
 
     /** @var string */
-    public $version = '1.0.1';
+    public $version = '1.0.2';
 
     /** @var string */
     public $author = 'CHIPAsia';
@@ -62,6 +62,7 @@ class Chip extends PaymentModule
         Configuration::updateValue('CHIP_PAYMENT_METHOD_WHITELIST', '');
         Configuration::updateValue('CHIP_DUE_STRICT', 0);
         Configuration::updateValue('CHIP_PURCHASE_TIME_ZONE', 'Asia/Kuala_Lumpur');
+        Configuration::updateValue('CHIP_CHECKOUT_TEXT', '');
 
         return true;
     }
@@ -73,6 +74,7 @@ class Chip extends PaymentModule
         Configuration::deleteByName('CHIP_PAYMENT_METHOD_WHITELIST');
         Configuration::deleteByName('CHIP_DUE_STRICT');
         Configuration::deleteByName('CHIP_PURCHASE_TIME_ZONE');
+        Configuration::deleteByName('CHIP_CHECKOUT_TEXT');
         Configuration::deleteByName('CHIP_PUBLIC_KEY');
 
         return parent::uninstall();
@@ -116,6 +118,7 @@ class Chip extends PaymentModule
 
                 Configuration::updateValue('CHIP_DUE_STRICT', (int) Tools::getValue('CHIP_DUE_STRICT', 0));
                 Configuration::updateValue('CHIP_PURCHASE_TIME_ZONE', (string) Tools::getValue('CHIP_PURCHASE_TIME_ZONE', 'Asia/Kuala_Lumpur'));
+                Configuration::updateValue('CHIP_CHECKOUT_TEXT', (string) Tools::getValue('CHIP_CHECKOUT_TEXT', ''));
 
                 $output .= $this->displayConfirmation($this->l('Settings updated'));
             } else {
@@ -198,6 +201,12 @@ class Chip extends PaymentModule
                 'required' => true,
                 'desc' => $this->l('Timezone used for the purchase (e.g. Asia/Kuala_Lumpur).'),
             ),
+            array(
+                'type' => 'textarea',
+                'label' => $this->l('Checkout Text'),
+                'name' => 'CHIP_CHECKOUT_TEXT',
+                'desc' => $this->l('Text shown under "Pay with CHIP" on the checkout page. Leave empty to list the configured payment methods automatically.'),
+            ),
         );
 
         $helper = new HelperForm();
@@ -216,6 +225,7 @@ class Chip extends PaymentModule
             'CHIP_PAYMENT_METHOD_WHITELIST[]' => Tools::jsonDecode(Configuration::get('CHIP_PAYMENT_METHOD_WHITELIST'), true),
             'CHIP_DUE_STRICT' => (int) Configuration::get('CHIP_DUE_STRICT'),
             'CHIP_PURCHASE_TIME_ZONE' => Configuration::get('CHIP_PURCHASE_TIME_ZONE'),
+            'CHIP_CHECKOUT_TEXT' => Configuration::get('CHIP_CHECKOUT_TEXT'),
         );
 
         return $helper->generateForm(array(array('form' => $fields_form)));
@@ -262,10 +272,15 @@ class Chip extends PaymentModule
             $this->context->cookie->write();
         }
 
+        // Custom checkout text from config; fall back to listing the
+        // configured payment methods.
+        $checkout_text = trim((string) Configuration::get('CHIP_CHECKOUT_TEXT'));
+
         $this->context->smarty->assign(array(
             'chip_payment_url' => $payment_url,
             'chip_logo' => $this->_path . 'logo.png',
             'chip_methods' => $this->getFormattedMethodLabels(),
+            'chip_checkout_text' => $checkout_text,
             'chip_module_name' => $this->displayName,
             'chip_error' => $error_message,
         ));
