@@ -32,25 +32,35 @@ class ChipCallbackModuleFrontController extends ModuleFrontController
         $brand_id = Configuration::get('CHIP_BRAND_ID');
         $chip = ChipApi::getInstance($secret_key, $brand_id);
 
-        $payment_id = (string) $this->context->cookie->chip_purchase_id;
-        $cart_id = (int) $this->context->cookie->chip_purchase_cart;
-        if (!$payment_id) {
-            $payment_id = (string) Tools::getValue('payment_id', '');
-        }
-        if (!$payment_id) {
-            $payment_id = (string) Tools::getValue('id', '');
-        }
-
         $content = file_get_contents('php://input');
         if ($content === false) {
             $content = '';
         }
         $signature = isset($_SERVER['HTTP_X_SIGNATURE']) ? (string) $_SERVER['HTTP_X_SIGNATURE'] : '';
 
+        // Prefer the signed payload; when the signature is missing or fails,
+        // fall back to the purchase id (cookie -> query -> webhook body) and
+        // fetch the actual status from the API.
         if (!empty($signature) && $chip->verifySignature($content, $signature)) {
             $payment = Tools::jsonDecode($content, true);
             if (is_array($payment) && !empty($payment['id'])) {
                 return $payment;
+            }
+        } elseif (!empty($signature)) {
+            PrestaShopLogger::addLog('CHIP: callback signature verification failed - falling back to API', 2, null, 'ChipCallback', null, true);
+        }
+
+        $payment_id = (string) $this->context->cookie->chip_purchase_id;
+        if ($payment_id === '') {
+            $payment_id = (string) Tools::getValue('payment_id', '');
+        }
+        if ($payment_id === '') {
+            $payment_id = (string) Tools::getValue('id', '');
+        }
+        if ($payment_id === '' && $content !== '') {
+            $body = Tools::jsonDecode($content, true);
+            if (is_array($body) && !empty($body['id'])) {
+                $payment_id = (string) $body['id'];
             }
         }
 
