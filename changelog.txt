@@ -1,5 +1,13 @@
 == Changelog ==
-## [1.0.1] - 2026-08-19
+## [1.0.2] - 2026-08-19
+
+### Added (parity with chip-for-prestashop 1.7-9.x)
+
+- DuitNow QR / ShopeePay group resolution (dnqr > duitnow_qr, shopee_pay > razer_shopeepay) via `/payment_methods/` (mirrors chip-for-fluent-cart).
+- `CHIP_CHECKOUT_TEXT` config: custom text shown under the "Pay with CHIP" button; empty = list configured payment methods.
+- CHIP brand logo (replaces the old WHMCS logo).
+- `.htaccess` root protection (Apache 2.4 / 2.2) per PrestaShop Marketplace mandatory technical rules.
+- `docs/readme_en.pdf` — English user guide (PDF).
 
 ### Fixed
 

@@ -62,9 +62,10 @@ class ChipPaymentModuleFrontController extends ModuleFrontController
      * Build CHIP purchase params following CHIP-API-SPEC.md (mirrors WooCommerce gateway).
      *
      * @param Cart $cart
+     * @param ChipApi $chip API client (used for payment method group resolution)
      * @return array
      */
-    protected function buildPurchaseParams(Cart $cart)
+    protected function buildPurchaseParams(Cart $cart, ChipApi $chip)
     {
         $currency = new Currency((int) $cart->id_currency);
         $iso_code = Validate::isLoadedObject($currency) ? strtoupper($currency->iso_code) : 'MYR';
@@ -210,12 +211,18 @@ class ChipPaymentModuleFrontController extends ModuleFrontController
             'client' => $client,
         );
 
-        // Optional payment method whitelist from config
+        // Optional payment method whitelist from config.
+        // Resolve DuitNow QR / ShopeePay groups against the merchant's actual
+        // /payment_methods/ (dnqr > duitnow_qr, shopee_pay > razer_shopeepay).
         $whitelist = Configuration::get('CHIP_PAYMENT_METHOD_WHITELIST');
         if (!empty($whitelist)) {
             $whitelist = Tools::jsonDecode($whitelist, true);
             if (is_array($whitelist) && count($whitelist) > 0) {
-                $params['payment_method_whitelist'] = $whitelist;
+                $params['payment_method_whitelist'] = $chip->resolvePaymentMethodGroups(
+                    $whitelist,
+                    $iso_code,
+                    $total_override
+                );
             }
         }
 
@@ -245,8 +252,8 @@ class ChipPaymentModuleFrontController extends ModuleFrontController
             return;
         }
 
-        $params = $this->buildPurchaseParams($cart);
         $chip = ChipApi::getInstance(Configuration::get('CHIP_SECRET_KEY'), Configuration::get('CHIP_BRAND_ID'));
+        $params = $this->buildPurchaseParams($cart, $chip);
         $purchase = $chip->createPurchase($params);
 
         if (!is_array($purchase) || empty($purchase['id']) || empty($purchase['checkout_url'])) {
