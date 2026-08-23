@@ -151,8 +151,26 @@ class Chip extends PaymentModule
         }
 
         $output .= $this->renderForm();
+        $output .= $this->renderTestApiButton();
 
         return $output;
+    }
+
+    /**
+     * "Test API" button + AJAX result container (POSTs to the ChipRefund admin
+     * controller action=testapi, which calls GET /payment_methods/?amount=1000).
+     *
+     * @return string HTML
+     */
+    protected function renderTestApiButton()
+    {
+        $test_url = $this->context->link->getAdminLink('ChipRefund', true);
+
+        $this->context->smarty->assign(array(
+            'chip_test_url' => $test_url,
+        ));
+
+        return $this->display(__FILE__, 'test_api.tpl');
     }
 
     /**
