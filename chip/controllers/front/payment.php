@@ -196,7 +196,7 @@ class ChipPaymentModuleFrontController extends ModuleFrontController
             'success_redirect' => $callback_url,
             'failure_redirect' => $callback_url,
             'cancel_redirect' => $callback_url,
-            'creator_agent' => 'PrestaShop 1.6: 1.0.0',
+            'creator_agent' => 'PrestaShop 1.6: 1.0.3',
             'reference' => (string) $cart->id,
             'platform' => 'prestashop',
             'purchase' => array(
@@ -252,7 +252,7 @@ class ChipPaymentModuleFrontController extends ModuleFrontController
             return;
         }
 
-        $chip = ChipApi::getInstance(Configuration::get('CHIP_SECRET_KEY'), Configuration::get('CHIP_BRAND_ID'));
+        $chip = $this->module->getApi();
         $params = $this->buildPurchaseParams($cart, $chip);
         $purchase = $chip->createPurchase($params);
 

@@ -99,16 +99,20 @@ Webhook idempotency: `validateOrder()` is only called once per cart; a second ca
 
 ## Refunds
 
-**Not supported from the PrestaShop back office.** PrestaShop 1.6 has no `displayAdminOrderContentOrder`-style payment-module hook and there is no tokenization, so:
+Refunds are issued from the PrestaShop back office: on the order page, a **Refund via CHIP**
+button (`displayAdminOrderContentOrder` hook) refunds the full paid amount via
+`POST /purchases/{id}/refund/` and marks the order **Refunded** (`PS_OS_REFUND`).
 
-- Refunds must be issued from the **CHIP dashboard** (or the CHIP API `POST /purchases/{id}/refund/`).
-- The CHIP purchase ID is saved as the `transaction_id` of the order payment so it can be matched against the CHIP dashboard.
+- Partial refunds are not supported from the back office — the button refunds the full paid
+  amount. Partial refunds can be done in the CHIP dashboard.
+- The CHIP purchase ID is saved as the `transaction_id` of the order payment so it can be
+  matched against the CHIP dashboard.
 
 ---
 
 ## Limitations
 
-- No refund UI in the back office (see above).
+- No partial refunds from the back office (see above).
 - No tokenization / saved-card / recurring payments.
 - No admin `mark as paid` / capture actions.
 - Payment method whitelist is configured per shop (Configuration values are shop-scoped where the module runs).

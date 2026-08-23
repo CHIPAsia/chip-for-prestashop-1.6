@@ -19,7 +19,7 @@ class Chip extends PaymentModule
     public $tab = 'payments_gateways';
 
     /** @var string */
-    public $version = '1.0.2';
+    public $version = '1.0.3';
 
     /** @var string */
     public $author = 'CHIPAsia';
@@ -56,6 +56,22 @@ class Chip extends PaymentModule
 
         $this->registerHook('displayPayment');
         $this->registerHook('displayPaymentReturn');
+        $this->registerHook('displayAdminOrderContentOrder');
+
+        // Hidden admin tab that routes the refund + test-api AJAX actions to
+        // controllers/admin/ChipRefundController.php.
+        $tab = new Tab();
+        $tab->active = 1;
+        $tab->class_name = 'ChipRefund';
+        $tab->name = array();
+        foreach (Language::getLanguages(true) as $lang) {
+            $tab->name[$lang['id_lang']] = 'CHIP Refund';
+        }
+        $tab->id_parent = -1; // hidden from the Back Office menu
+        $tab->module = $this->name;
+        if (!$tab->add()) {
+            return false;
+        }
 
         Configuration::updateValue('CHIP_SECRET_KEY', '');
         Configuration::updateValue('CHIP_BRAND_ID', '');
@@ -69,6 +85,14 @@ class Chip extends PaymentModule
 
     public function uninstall()
     {
+        $id_tab = (int) Tab::getIdFromClassName('ChipRefund');
+        if ($id_tab > 0) {
+            $tab = new Tab($id_tab);
+            if (Validate::isLoadedObject($tab) && $tab->module === $this->name) {
+                $tab->delete();
+            }
+        }
+
         Configuration::deleteByName('CHIP_SECRET_KEY');
         Configuration::deleteByName('CHIP_BRAND_ID');
         Configuration::deleteByName('CHIP_PAYMENT_METHOD_WHITELIST');
@@ -317,6 +341,42 @@ class Chip extends PaymentModule
     }
 
     /**
+     * Hook displayAdminOrderContentOrder: refund button on the admin order page.
+     *
+     * @param array $params ['order' => Order]
+     * @return string HTML
+     */
+    public function hookDisplayAdminOrderContentOrder($params)
+    {
+        if (!$this->active) {
+            return '';
+        }
+
+        $order = isset($params['order']) ? $params['order'] : null;
+        if (!Validate::isLoadedObject($order)) {
+            return '';
+        }
+
+        if ($order->module !== $this->name) {
+            return '';
+        }
+
+        $purchase_id = $this->getOrderPurchaseId($order);
+        if ($purchase_id === '') {
+            return '';
+        }
+
+        $this->context->smarty->assign(array(
+            'chip_refund_url' => $this->context->link->getAdminLink('ChipRefund', true),
+            'chip_purchase_id' => $purchase_id,
+            'chip_id_order' => (int) $order->id,
+            'chip_total_paid' => $order->total_paid,
+        ));
+
+        return $this->display(__FILE__, 'admin_refund.tpl');
+    }
+
+    /**
      * Human readable payment method labels for the checkout template (exact spellings).
      *
      * @return array
@@ -367,5 +427,45 @@ class Chip extends PaymentModule
         }
 
         return $output;
+    }
+
+    /**
+     * Instantiate the CHIP API client with the configured credentials.
+     *
+     * Explicit require guard: the PrestaShop class index may not include
+     * module classes (e.g. copied into place, or installed before the index
+     * was rebuilt), which would otherwise raise "Class 'ChipApi' not found".
+     *
+     * @return ChipApi
+     */
+    public function getApi()
+    {
+        if (!class_exists('ChipApi', false)) {
+            require_once _PS_MODULE_DIR_ . $this->name . '/classes/ChipApi.php';
+        }
+
+        return ChipApi::getInstance(
+            (string) Configuration::get('CHIP_SECRET_KEY'),
+            (string) Configuration::get('CHIP_BRAND_ID')
+        );
+    }
+
+    /**
+     * Read the CHIP purchase id stored on the order (transaction id of the
+     * order payment). Used by the admin refund button.
+     *
+     * @param Order $order
+     * @return string purchase id, or '' when none
+     */
+    public function getOrderPurchaseId(Order $order)
+    {
+        foreach ($order->getOrderPaymentCollection() as $payment) {
+            $transaction_id = (string) $payment->transaction_id;
+            if ($transaction_id !== '') {
+                return $transaction_id;
+            }
+        }
+
+        return '';
     }
 }

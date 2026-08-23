@@ -1,4 +1,23 @@
 == Changelog ==
+## [1.0.3] - 2026-08-24
+
+### Fixed
+
+- `Class 'ChipApi' not found` fatal error on the payment/callback controllers when
+  the PrestaShop class index has not picked up the module's `classes/ChipApi.php`
+  (e.g. module copied into place or installed before the index was rebuilt).
+  The module now exposes `Chip::getApi()` with an explicit `require_once` guard and
+  the controllers call `$this->module->getApi()` instead of `ChipApi::getInstance()`
+  directly (mirrors the 9.x module).
+
+### Added (parity with chip-for-prestashop 1.7-9.x)
+
+- Admin refund button on the order page (`displayAdminOrderContentOrder` hook) that
+  refunds the full paid amount via `POST /purchases/{id}/refund/` and marks the order
+  **Refunded** (`PS_OS_REFUND`). Includes the hidden `ChipRefund` admin tab + AJAX
+  controller (`action=refund` and `action=testapi`).
+- `ChipApi::refundPurchase()` method.
+
 ## [1.0.2] - 2026-08-19
 
 ### Added (parity with chip-for-prestashop 1.7-9.x)

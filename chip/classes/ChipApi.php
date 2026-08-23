@@ -168,6 +168,24 @@ class ChipApi
     }
 
     /**
+     * Refund a purchase. Amount is in sen (minor units).
+     *
+     * @param string $purchase_id
+     * @param int $amount_sen
+     * @return array|false refund data, or false on error
+     */
+    public function refundPurchase($purchase_id, $amount_sen)
+    {
+        if ($purchase_id === '' || $amount_sen <= 0) {
+            return false;
+        }
+
+        return $this->request('POST', '/purchases/' . rawurlencode($purchase_id) . '/refund/', array(
+            'amount' => $amount_sen,
+        ));
+    }
+
+    /**
      * List available payment methods for the brand.
      * `amount` is mandatory (in sen); use 1000 (RM 10) as the safe default for
      * availability checks so that all methods are returned (see CHIP-API-SPEC.md).
