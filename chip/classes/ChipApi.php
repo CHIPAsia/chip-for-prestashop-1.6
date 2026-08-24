@@ -164,7 +164,7 @@ class ChipApi
             return false;
         }
 
-        return $this->request('GET', '/purchases/' . $purchase_id . '/', array());
+        return $this->request('GET', '/purchases/' . rawurlencode($purchase_id) . '/', array());
     }
 
     /**
