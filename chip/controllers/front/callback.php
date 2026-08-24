@@ -28,9 +28,7 @@ class ChipCallbackModuleFrontController extends ModuleFrontController
      */
     protected function getPaymentData()
     {
-        $secret_key = Configuration::get('CHIP_SECRET_KEY');
-        $brand_id = Configuration::get('CHIP_BRAND_ID');
-        $chip = ChipApi::getInstance($secret_key, $brand_id);
+        $chip = $this->module->getApi();
 
         $content = file_get_contents('php://input');
         if ($content === false) {

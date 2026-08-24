@@ -164,7 +164,25 @@ class ChipApi
             return false;
         }
 
-        return $this->request('GET', '/purchases/' . $purchase_id . '/', array());
+        return $this->request('GET', '/purchases/' . rawurlencode($purchase_id) . '/', array());
+    }
+
+    /**
+     * Refund a purchase. Amount is in sen (minor units).
+     *
+     * @param string $purchase_id
+     * @param int $amount_sen
+     * @return array|false refund data, or false on error
+     */
+    public function refundPurchase($purchase_id, $amount_sen)
+    {
+        if ($purchase_id === '' || $amount_sen <= 0) {
+            return false;
+        }
+
+        return $this->request('POST', '/purchases/' . rawurlencode($purchase_id) . '/refund/', array(
+            'amount' => $amount_sen,
+        ));
     }
 
     /**
