@@ -25,8 +25,10 @@ Accept payments via CHIP: FPX, FPX B2B1, DuitNow QR, Card (Visa, Mastercard, Mae
    ├── config.xml
    ├── logo.png
    ├── controllers/front/{payment,callback}.php
+   ├── controllers/admin/ChipRefundController.php
    ├── classes/ChipApi.php
    ├── views/templates/front/{payment,payment_return}.tpl
+   ├── views/templates/hook/{admin_refund,test_api}.tpl
    └── index.php (per folder)
    ```
 2. Back office → **Modules → Modules** → find **CHIP** → **Install**.
@@ -43,6 +45,7 @@ Accept payments via CHIP: FPX, FPX B2B1, DuitNow QR, Card (Visa, Mastercard, Mae
 | **Payment Methods** | Multi-select whitelist of payment method codes (`fpx`, `fpx_b2b1`, `card`, `duitnow_qr`, `razer_atome`, `razer_grabpay`, `razer_maybankqr`, `razer_shopeepay`, `razer_tng`, `crypto_coin`). Empty = all methods allowed. |
 | **Due Strict** | When enabled, payment must complete before the due time (`CHIP_DUE_STRICT`). |
 | **Purchase Timezone** | Timezone for the purchase (default `Asia/Kuala_Lumpur`, `CHIP_PURCHASE_TIME_ZONE`). |
+| **Checkout Text** | Custom text shown under "Pay with CHIP" on the checkout page (`CHIP_CHECKOUT_TEXT`). Empty = list the configured payment methods. |
 
 Configuration values are stored with the `CHIP_` prefix in `ps_configuration`.
 
@@ -62,14 +65,14 @@ Configuration values are stored with the `CHIP_` prefix in `ps_configuration`.
      "success_redirect": "https://shop/module/chip/callback?id_cart=12",
      "failure_redirect": "https://shop/module/chip/callback?id_cart=12",
      "cancel_redirect": "https://shop/module/chip/callback?id_cart=12",
-     "creator_agent": "PrestaShop 1.6: 1.0.0",
+     "creator_agent": "PrestaShop 1.6: 1.0.3",
      "reference": "12",
      "platform": "prestashop",
      "purchase": {
        "total_override": 12500,
        "due_strict": false,
        "timezone": "Asia/Kuala_Lumpur",
-       "currency": "myr",
+       "currency": "MYR",
        "language": "en",
        "products": [{"name": "...", "price": 12500, "quantity": 1}]
      },
@@ -88,7 +91,7 @@ Configuration values are stored with the `CHIP_` prefix in `ps_configuration`.
 
 - Verifies the `X-Signature` header using the CHIP public key (`GET /public_key/`, cached in `CHIP_PUBLIC_KEY`), signature is RSA PKCS#1 v1.5 / SHA-256, base64 decoded:
   `openssl_verify($content, base64_decode($signature), $key, 'sha256WithRSAEncryption')`
-- If the signature is missing or verification fails → **fallback**: `GET /purchases/{id}/` to check the real status (purchase id read from the customer's session cookie).
+- If the signature is missing or verification fails → **fallback**: `GET /purchases/{id}/` to check the real status (purchase id read from the session cookie, then the query string, then the webhook body).
 - **`status === 'paid'`** → `validateOrder()` with `PS_OS_PAYMENT`, guarded so it never double-validates (`Order::getOrderByCartId()` is checked first).
 - On success the customer is redirected to `order-confirmation` (`id_cart` + `id_module` + `key`).
 - Non-paid statuses are logged and the customer is redirected back to the order page.
@@ -116,7 +119,7 @@ button (`displayAdminOrderContentOrder` hook) refunds the full paid amount via
 - No tokenization / saved-card / recurring payments.
 - No admin `mark as paid` / capture actions.
 - Payment method whitelist is configured per shop (Configuration values are shop-scoped where the module runs).
-- PHP 5.6 is the minimum; the module does **not** use PHP 7+ syntax.
+- PHP 5.4 is the minimum; the module does **not** use PHP 7+ syntax.
 
 ---
 
