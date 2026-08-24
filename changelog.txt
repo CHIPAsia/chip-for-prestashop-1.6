@@ -9,13 +9,17 @@
   The module now exposes `Chip::getApi()` with an explicit `require_once` guard and
   the controllers call `$this->module->getApi()` instead of `ChipApi::getInstance()`
   directly (mirrors the 9.x module).
+- URL-encode the purchase id in `ChipApi::getPurchase()` (`rawurlencode`) — parity
+  with the 9.x module and `refundPurchase()`.
 
 ### Added (parity with chip-for-prestashop 1.7-9.x)
 
 - Admin refund button on the order page (`displayAdminOrderContentOrder` hook) that
   refunds the full paid amount via `POST /purchases/{id}/refund/` and marks the order
   **Refunded** (`PS_OS_REFUND`). Includes the hidden `ChipRefund` admin tab + AJAX
-  controller (`action=refund` and `action=testapi`).
+  controller (`action=refund`).
+- "Test API" button on the module configuration page (`action=testapi`) that verifies
+  the Secret Key / Brand ID via `GET /payment_methods/?amount=1000`.
 - `ChipApi::refundPurchase()` method.
 
 ## [1.0.2] - 2026-08-19
